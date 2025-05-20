@@ -137,4 +137,56 @@ Global_Tiles_Dark_Z0-5/
 
 -----
 
+## Dockerfile for the Tile Downloader
+### How to use this Dockerfile
+
+1.  **Create `requirements.txt`:**
+    First, create a file named `requirements.txt` in the same directory as your `enhanced_tile_downloader.py` and `Dockerfile`. This file should list the Python dependencies your script needs:
+
+    ```
+    requests
+    tqdm
+    ```
+
+2.  **Build the Docker Image:**
+    Open your terminal or command prompt, navigate to the directory where you saved the `Dockerfile`, `enhanced_tile_downloader.py`, and `requirements.txt`, and run the following command:
+
+    ```bash
+    docker build -t tile-downloader .
+    ```
+
+    This command builds a Docker image named `tile-downloader` based on your `Dockerfile`. The `.` at the end indicates that the build context is the current directory.
+
+3.  **Run the Docker Container:**
+    Once the image is built, you can run your tile downloader inside a Docker container. You'll need to specify the download arguments and also mount a volume so that the downloaded tiles are saved to your host machine (otherwise, they'd just be inside the container and disappear when the container stops).
+
+    Here's an example command to download global tiles from Z0-Z5, saving them to a local folder named `my_downloaded_tiles`:
+
+    ```bash
+    docker run --rm -v "$(pwd)/my_downloaded_tiles:/app/Global_Tiles_Dark_Z0-5" tile-downloader ^
+        --url dark_all ^
+        --min_zoom 0 ^
+        --max_zoom 5 ^
+        --min_lat -90.0 ^
+        --min_lon -180.0 ^
+        --max_lat 90.0 ^
+        --max_lon 180.0 ^
+        --output "Global_Tiles_Dark_Z0-5" ^
+        --workers 10 ^
+        --retries 3
+    ```
+
+      * `--rm`: This option automatically removes the container once it exits.
+      * `-v "$(pwd)/my_downloaded_tiles:/app/Global_Tiles_Dark_Z0-5"`: This is the **volume mount**.
+          * `"$(pwd)/my_downloaded_tiles"`: This specifies a directory on your *host* machine (the current directory `pwd` followed by `my_downloaded_tiles`).
+          * `:/app/Global_Tiles_Dark_Z0-5`: This specifies the corresponding directory *inside the container* where the script will try to save the tiles (based on your `--output` argument). Make sure the path after `/app/` matches your `--output` argument's value. If you change your `--output` folder, you'll need to change this part of the volume mount too.
+      * `tile-downloader`: This is the name of the Docker image you built.
+      * The remaining arguments (`--url`, `--min_zoom`, etc.) are passed directly to your Python script running inside the container.
+
+    **Note for Windows users:** If you're using Command Prompt, you might need to change `$(pwd)` to `%cd%` and adjust path separators if necessary, or use Git Bash/WSL for a more Unix-like experience. For PowerShell, `$(pwd)` should work.
+
+This `Dockerfile` provides a solid foundation for packaging and running your tile downloader.
+
+-----
+
 Thank you for using this tool\! Feel free to provide feedback or suggestions.
